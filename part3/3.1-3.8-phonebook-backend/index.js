@@ -4,9 +4,13 @@ const morgan = require("morgan");
 
 
 morgan.token("test", (req, res) => {
-    const { name, number } = req.body;
-    const person = { name, number }
-    return JSON.stringify(person);
+    if(req.method == "POST") {
+        const { name, number } = req.body;
+        const person = { name, number }
+        return JSON.stringify(person);
+    } else {
+        return null;
+    }
 })
 
 app.use(express.json());
