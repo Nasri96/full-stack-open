@@ -8,6 +8,7 @@ const app = express();
 
 
 const mongoUrl = config.MONGODB_URI;
+console.log("connecting to: ", mongoUrl);
 mongoose.connect(mongoUrl, { family: 4 })
     .then(() => {
         console.log("connected to mongodb");
