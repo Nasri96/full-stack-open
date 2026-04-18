@@ -1,5 +1,5 @@
 {
-  "name": "4.1-4.14-blog",
+  "name": "4.1-4.23-blog",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
@@ -11,8 +11,10 @@
     "dev": "cross-env NODE_ENV=development node --watch index.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1"
   },
   "devDependencies": {

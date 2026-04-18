@@ -1,26 +1,48 @@
 const blogRouter = require("express").Router();
 const Blog = require("../models/blog");
+const User = require("../models/user");
+const jwt = require("jsonwebtoken");
 
 blogRouter.get('/', async(request, response) => {
-	const blogs = await Blog.find({});
+	const blogs = await Blog.find({}).populate("user", "-blogs")
 
 	response.json(blogs);
 })
 
-blogRouter.post('/', async(request, response) => {
+blogRouter.post('/', async(request, response, next) => {
 	const likes = request.body.likes || 0;
 	
 	if(!request.body.title || !request.body.url) {
 		return response.status(400).end();
 	}
 
-	const blog = new Blog({ likes, ...request.body});
+	// token auth
+	const decodedUser = request.user;
+
+
+	const user = await User.findById(decodedUser.id);
+
+	// blog creation
+	const blog = new Blog({ likes, ...request.body, user: user.id});
+	user.blogs = user.blogs.concat(blog._id);
 
 	const savedBlog = await blog.save();
+	const savedUser = await user.save();
+
 	response.status(201).json(savedBlog);
 })
 
 blogRouter.delete("/:id", async(request,response) => {
+
+	const decodedUser = request.user;
+
+	const user = await User.findById(decodedUser.id);
+	const blog = await Blog.findById(request.params.id);
+
+	if(user._id.toString() !== blog.user.toString()) {
+		return response.status(403).json({ error: "not authorized" });
+	}
+
 	const id = request.params.id;
 	const deletedBlog = await Blog.findByIdAndDelete(id);
 
