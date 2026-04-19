@@ -2,6 +2,7 @@ const blogRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const { userExtractor, tokenExtractor } = require("../utils/middleware");
 
 blogRouter.get('/', async(request, response) => {
 	const blogs = await Blog.find({}).populate("user", "-blogs")
@@ -9,7 +10,7 @@ blogRouter.get('/', async(request, response) => {
 	response.json(blogs);
 })
 
-blogRouter.post('/', async(request, response, next) => {
+blogRouter.post('/', tokenExtractor, userExtractor, async(request, response, next) => {
 	const likes = request.body.likes || 0;
 	
 	if(!request.body.title || !request.body.url) {
@@ -18,7 +19,6 @@ blogRouter.post('/', async(request, response, next) => {
 
 	// token auth
 	const decodedUser = request.user;
-
 
 	const user = await User.findById(decodedUser.id);
 
@@ -32,7 +32,7 @@ blogRouter.post('/', async(request, response, next) => {
 	response.status(201).json(savedBlog);
 })
 
-blogRouter.delete("/:id", async(request,response) => {
+blogRouter.delete("/:id", tokenExtractor, userExtractor, async(request,response) => {
 
 	const decodedUser = request.user;
 

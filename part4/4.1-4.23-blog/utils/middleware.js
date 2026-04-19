@@ -4,7 +4,11 @@ const tokenExtractor = (request, response, next) => {
     // token auth
     const token = request.get("authorization");
 
-    const tokenExtracted = token && token.replace("Bearer ", "");
+    if(!token || !token.startsWith("Bearer ")) {
+        return response.status(401).json({ error: "invalid token" });
+    }
+
+    const tokenExtracted = token.replace("Bearer ", "");
 
     request.token = tokenExtracted;
 
