@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react'
-import Blog from './components/Blog'
-import blogService from './services/blogs'
+import { useState, useEffect, useRef } from 'react';
+import Blog from './components/Blog';
+import blogService from './services/blogs';
 import loginService from "./services/login";
+import Togglable from './components/Togglable';
+import BlogForm from './components/BlogForm';
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [blogTitle, setBlogTitle] = useState("");
-  const [blogAuthor, setBlogAuthor] = useState("");
-  const [blogUrl, setBlogUrl] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const blogFormRef = useRef(null);
+
+  const blogsSortedByLikes = blogs.length > 0 && blogs[0].likes === Math.max(...blogs.map(blog => blog.likes));
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -47,19 +49,16 @@ const App = () => {
     setUser(null);
   }
 
-  const handleCreate = async(event) => {
-    event.preventDefault();
+  const handleCreateBlog = async({ title, author, url }) => {
     console.log("creating blog...");
     try {
-      const newBlog = await blogService.create({ title: blogTitle, author: blogAuthor, url: blogUrl }, user.token);
+      const newBlog = await blogService.create({ title, author, url }, user.token);
       setBlogs(blogs.concat(newBlog));
-      setBlogTitle("");
-      setBlogAuthor("");
-      setBlogUrl("");
       setSuccess(`a new blog ${newBlog.title} by ${newBlog.author} added`);
+      blogFormRef.current.toggleVisibility();
       setTimeout(() => {
         setSuccess(null);
-      }, 4000)
+      }, 5000)
     } catch(error) {
       setError(error);
       setTimeout(() => {
@@ -68,46 +67,64 @@ const App = () => {
     }
   }
 
+  const handleSortBlogs = () => {
+    // check if blogs are already sorted
+    if(blogsSortedByLikes) {
+      return blogService.getAll().then(blogs =>
+        setBlogs( blogs )
+      )
+    }
+
+
+    let sortedBlogs = blogs.map(blog => blog);
+    sortedBlogs = sortedBlogs.sort((a, b) => {
+      if(a.likes > b.likes) {
+        return -1;
+      } else if(b.likes > a.likes) {
+        return 1;
+      } 
+      return 0;
+    })
+
+    setBlogs(sortedBlogs);
+    
+  }
+
+  const blogForm = () => {
+
+    return (
+      <Togglable buttonName="create new blog" ref={blogFormRef}>
+        <BlogForm createBlog={handleCreateBlog} />
+      </Togglable>
+    )
+  }
+  
+
   return (
     <div>
-      {error && <p style={{ backgroundColor: 'gray', color: "red", fontSize: "22px", padding: "10px"}}>{error}</p>}
-      {success && <p style={{ backgroundColor: 'gray', color: "green", fontSize: "22px", padding: "10px"}}>{success}</p>}
+      {error && <p style={{ backgroundColor: '#d1d1d1', color: "#990000", fontSize: "22px", padding: "10px"}}>{error}</p>}
+      {success && <p style={{ backgroundColor: '#d1d1d1', color: "#007313", fontSize: "22px", padding: "10px"}}>{success}</p>}
       {user && (
         <>
         <h2>blogs</h2>
         <div>
           <p>{user.username} logged in <button onClick={handleLogout}>logout</button></p> 
         </div>
+        {blogForm()}
         <div>
-          <h2>create</h2>
-          <form onSubmit={handleCreate}>
-            <div>
-              <label>
-                title
-                <input type='text' value={blogTitle} onChange={(event) => setBlogTitle(event.target.value)} />
-              </label>
-            </div>
-            
-            <div>
-              <label>
-                author
-                <input type='text' value={blogAuthor} onChange={(event) => setBlogAuthor(event.target.value)} />
-              </label>
-            </div>
-
-            <div>
-              <label>
-                url
-                <input type='text' value={blogUrl} onChange={(event) => setBlogUrl(event.target.value)} />
-              </label>
-            </div>
-            <button type='submit'>create</button>
-          </form>
+          <button onClick={handleSortBlogs}>{blogsSortedByLikes ? "sort default" : "sort by likes"}</button>
         </div>
         {blogs.map(blog =>
-          <Blog key={blog.id} blog={blog} />
+          <Blog 
+            key={blog.id} 
+            blog={blog} 
+            setBlogs={setBlogs} 
+            user={user} 
+            setError={setError} 
+            setSuccess={setSuccess}
+          />
         )}
-
+        
         
         </>
       )}

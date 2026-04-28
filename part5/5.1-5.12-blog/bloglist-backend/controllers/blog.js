@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { userExtractor, tokenExtractor } = require("../utils/middleware");
 
 blogRouter.get('/', async(request, response) => {
-	const blogs = await Blog.find({}).populate("user", "-blogs")
+	const blogs = await Blog.find({}).populate("user", "-blogs");
 
 	response.json(blogs);
 })
@@ -29,7 +29,9 @@ blogRouter.post('/', tokenExtractor, userExtractor, async(request, response, nex
 	const savedBlog = await blog.save();
 	const savedUser = await user.save();
 
-	response.status(201).json(savedBlog);
+	const populatedBlog = await savedBlog.populate("user", -"blogs");
+
+	response.status(201).json(populatedBlog);
 })
 
 blogRouter.delete("/:id", tokenExtractor, userExtractor, async(request,response) => {
@@ -50,10 +52,16 @@ blogRouter.delete("/:id", tokenExtractor, userExtractor, async(request,response)
 		return response.status(404).end();
 	}
 
+	// delete blog id from users blogs
+	user.blogs = user.blogs.filter(blogId => blogId !== id);
+	await user.save();
+
 	return response.status(204).end();
 })
 
 blogRouter.put("/:id", async(request, response) => {
+	const { title, author, url, likes } = request.body;
+
 	const id = request.params.id;
 	let blogToUpdate = await Blog.findById(id);
 
@@ -61,13 +69,15 @@ blogRouter.put("/:id", async(request, response) => {
 		return response.status(404).end();
 	}
 
-	if(!request.body || !request.body.likes) {
+	if(!request.body || !request.body.likes || !request.body.title || !request.body.author || !request.body.url) {
+		console.log(request.body);
 		return response.status(400).end();
 	}
 
-	const updatedLikes = request.body.likes;
-
-	blogToUpdate.likes = updatedLikes;
+	blogToUpdate.likes = likes;
+	blogToUpdate.title = title;
+	blogToUpdate.author = author;
+	blogToUpdate.url = url;
 
 	const updatedBlog = await blogToUpdate.save();
 
