@@ -3,8 +3,6 @@ import Togglable from "./Togglable";
 import blogService from "../services/blogs";
 
 const Blog = ({ blog, setBlogs, user, setError, setSuccess }) => {
-  console.log(blog);
-  console.log(blog.user.username, user.username);
   const [blogDetailsShown, setBlogDetailsShown] = useState(false);
 
   const blogStyle = {
