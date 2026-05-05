@@ -80,8 +80,9 @@ blogRouter.put("/:id", async(request, response) => {
 	blogToUpdate.url = url;
 
 	const updatedBlog = await blogToUpdate.save();
+	const updatedBlogWithUser = await updatedBlog.populate("user", "-blogs");
 
-	return response.json(updatedBlog);
+	return response.json(updatedBlogWithUser);
 })
 
 module.exports = blogRouter;

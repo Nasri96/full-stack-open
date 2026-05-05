@@ -15,6 +15,7 @@ const App = () => {
   const blogFormRef = useRef(null);
 
   const blogsSortedByLikes = blogs.length > 0 && blogs[0].likes === Math.max(...blogs.map(blog => blog.likes));
+  console.log(blogsSortedByLikes);
 
   useEffect(() => {
     blogService.getAll().then(blogs =>

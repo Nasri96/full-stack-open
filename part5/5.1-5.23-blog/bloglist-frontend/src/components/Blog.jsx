@@ -4,6 +4,8 @@ import blogService from "../services/blogs";
 
 const Blog = ({ blog, setBlogs, user, setError, setSuccess }) => {
   const [blogDetailsShown, setBlogDetailsShown] = useState(false);
+  console.log(blog.user);
+  console.log(user.username);
 
   const blogStyle = {
     paddingTop: 10,
@@ -61,7 +63,7 @@ const Blog = ({ blog, setBlogs, user, setError, setSuccess }) => {
   return (
     <>
       {blogDetailsShown && (
-        <div style={blogStyle}>
+        <div className="blog" style={blogStyle}>
           <p>{blog.title} <button onClick={handleDetailsShown}>hide</button></p>
           <p>{blog.url}</p>
           <p>likes {blog.likes} <button onClick={handleLike}>like</button></p>
@@ -71,7 +73,7 @@ const Blog = ({ blog, setBlogs, user, setError, setSuccess }) => {
         </div>
       )} 
       {!blogDetailsShown && (
-        <div style={blogStyle}>
+        <div className="blog" style={blogStyle}>
           {blog.title} {blog.author} <button onClick={handleDetailsShown}>view</button>
         </div> 
       )}
