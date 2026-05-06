@@ -70,7 +70,6 @@ blogRouter.put("/:id", async(request, response) => {
 	}
 
 	if(!request.body || !request.body.likes || !request.body.title || !request.body.author || !request.body.url) {
-		console.log(request.body);
 		return response.status(400).end();
 	}
 

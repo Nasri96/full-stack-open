@@ -4,8 +4,6 @@ import blogService from "../services/blogs";
 
 const Blog = ({ blog, setBlogs, user, setError, setSuccess }) => {
   const [blogDetailsShown, setBlogDetailsShown] = useState(false);
-  console.log(blog.user);
-  console.log(user.username);
 
   const blogStyle = {
     paddingTop: 10,

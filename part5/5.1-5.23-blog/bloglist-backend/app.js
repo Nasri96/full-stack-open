@@ -8,7 +8,6 @@ const loginRouter = require("./controllers/login");
 const app = express();
 
 
-
 const mongoUrl = config.MONGODB_URI;
 console.log("connecting to: ", mongoUrl);
 mongoose.connect(mongoUrl, { family: 4 })

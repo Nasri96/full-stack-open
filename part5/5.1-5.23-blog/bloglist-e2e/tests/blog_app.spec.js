@@ -53,7 +53,7 @@ describe("Blog App", () => {
             await createBlog(page, "title", "author", "url");
 
             await page.getByRole("button", { name: "view" }).click();
-            const p = await page.getByText("likes");
+            const p = page.getByText("likes");
             const pAllText = await p.textContent();
             const pSplitted = pAllText.split(" ");
             const likesBefore = pSplitted[1];
@@ -61,7 +61,7 @@ describe("Blog App", () => {
             await page.getByRole("button", { name: "like" }).click();
             await page.waitForLoadState('networkidle'); 
 
-            const pAfter = await page.getByText("likes");
+            const pAfter = page.getByText("likes");
             const pAfterAllText = await pAfter.textContent();
             const pAfterSplitted = pAfterAllText.split(" ");
             const likesAfter = pAfterSplitted[1];
@@ -127,42 +127,72 @@ describe("Blog App", () => {
                 await page.waitForLoadState('networkidle');
             }
             
-            // like first blog 2 times
-            for(let i = 0; i < 2; i++) {
-                await page.getByRole("button", { name: "view" }).nth(0).click();
-                await page.getByRole("button", { name: "like", exact: true }).click();
-                
-                await page.waitForLoadState('networkidle');
-                await page.getByRole("button", { name: "hide" }).click();
+            // like first blog 2 times, second blog 5 times
+            for(let i = 0; i < 7; i++) {
+                const viewButton =  page.getByRole("button", { name: "view" }).nth(i < 2 ? 0 : 1);
+                await expect(viewButton).toBeVisible();
+                await viewButton.click();
+
+                const likeButton = page.getByRole("button", { name: "like", exact: true });
+                await expect(likeButton).toBeVisible();
+
+                await Promise.all([
+                    page.waitForResponse(res => {
+                        return res.url().includes("/api/blogs") && res.request().method() === "PUT";
+                    }),
+                    likeButton.click()
+                ])
+
+                const hideButton = page.getByRole("button", { name: "hide" });
+                await expect(hideButton).toBeVisible();
+                await hideButton.click();
             }
 
-            
-            // like second blog 5 times(this does not work reliably)
-            for(let i = 0; i < 5; i++) {
-                await page.getByRole("button", { name: "view" }).nth(1).click();
-                await page.getByRole("button", { name: "like", exact: true }).click();
-                
-
-                await page.waitForLoadState('networkidle');
-                await page.getByRole("button", { name: "hide" }).click();
-                
-            }
 
             // like third blog 1 time
             await page.waitForLoadState('networkidle');
             await page.getByRole("button", { name: "view" }).nth(2).click();
-            await page.getByRole("button", { name: "like", exact: true }).click();
+            await Promise.all([
+                page.waitForResponse(res => {
+                    return res.url().includes("/api/blogs") && res.request().method() === "PUT";
+                }),
+                page.getByRole("button", { name: "like", exact: true }).click()
+            ])
             await page.getByRole("button", { name: "hide" }).click();
         })
 
-        test("blogs are arranged in order according to the most likes", async({ page }) => {
+        test("all blogs are arranged in order according to the most likes", async({ page }) => {
             await page.getByRole("button", { name: "sort by likes" }).click();
 
-            // blog with most likes
-            await expect(page.locator(".blog").nth(0).getByText("blog title1 blog author1")).toBeVisible();
+            const blogs = page.locator(".blog");
+            const blogCount = await blogs.count();
+            for(let i = 0; i < blogCount; i++) {
+                if(i < blogCount - 1) {
+                    const blog = blogs.nth(i);
+                    const nextBlog = blogs.nth(i + 1);
+                    // click on view button, get the likes of current i and the next one
+                    const viewCurrent = blog.getByRole("button", { name: "view" });
+                    
+                    await viewCurrent.click();
+                    const pCurrent = blog.getByText("likes");
+                   
+                    const pCurrentText = await pCurrent.textContent();
+                    const pCurrentLikes = parseInt(pCurrentText.split(" ")[1]);
+                    await blog.getByRole("button", { name: "hide" }).click();
+                    
+                
+                    const viewNext = nextBlog.getByRole("button", { name: "view" });
 
-            // blog with least likes
-            await expect(page.locator(".blog").nth(2).getByText("blog title2 blog author2")).toBeVisible();
+                    await viewNext.click();
+                    const pNext = nextBlog.getByText("likes");
+
+                    const pNextText = await pNext.textContent();
+                    const pNextLikes = parseInt(pNextText.split(" ")[1]);
+                    await nextBlog.getByRole("button", { name: "hide" }).click();
+
+                    await expect(pCurrentLikes).toBeGreaterThan(pNextLikes);
+                }
+            }
             
         })
     })
