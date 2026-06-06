@@ -1,5 +1,6 @@
 
-import { create } from 'zustand'
+import { create } from 'zustand';
+import { anecdotesService } from './services/anecdotes';
 
 const anecdotesAtStart = [
   'If it hurts, do it more often',
@@ -18,13 +19,13 @@ const asObject = anecdote => ({
   votes: 0
 })
 
-const useAnecdoteStore = create((set) => ({
-  anecdotes: anecdotesAtStart.map(asObject),
+const useAnecdoteStore = create((set, get) => ({
+  anecdotes: [],
   filter: "",
   actions: {
     addAnecdote: anecdote => {
       return set(state => {
-        return { anecdotes: state.anecdotes.concat(asObject(anecdote)) };
+        return { anecdotes: state.anecdotes.concat(anecdote) };
       })
     },
     voteAnecdote: anecdoteId => {
@@ -42,18 +43,54 @@ const useAnecdoteStore = create((set) => ({
           filter: filterVal
         }
       })
+    },
+    initializeAnecdotes: async() => {
+      const anecdotes = await anecdotesService.getAnecdotes();
+      set(state => {
+        return { anecdotes };
+      })
+    },
+    removeAnecdote: async(anecdoteId) => {
+      set(state => {
+        return { anecdotes: state.anecdotes.filter(a => a.id !== anecdoteId) };
+      })
     }
   },
 }))
 
+const useNotificationStore = create((set, get) => {
+  return {
+    notification: null,
+    actions: {
+      setNotification: (message) => {
+        set(state => {
+          return { notification: message }
+        })
+      }
+    }
+  }
+})
+
+
 export const useAnecdotes = () => {
   const anecdotes = useAnecdoteStore(state => state.anecdotes);
   const filter = useAnecdoteStore(state => state.filter);
-  console.log(filter);
+  
   if(!filter) {
     return anecdotes;
   }
 
   return anecdotes.filter(a => a.content.toLowerCase().includes(filter.toLowerCase()));
 }
-export const useAnecdoteActions = () => useAnecdoteStore((state) => state.actions)
+export const useAnecdoteActions = () => useAnecdoteStore((state) => state.actions);
+
+
+export const useNotifications = () => {
+  const notifications = useNotificationStore(state => state.notification);
+  return notifications;
+}
+
+export const useNotificationActions = () => {
+  const notificationActions = useNotificationStore(state => state.actions);
+  return notificationActions;
+}
