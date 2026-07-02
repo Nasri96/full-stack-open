@@ -28,8 +28,8 @@ const AnecdoteList = () => {
     return (
         <>
         {anecdotes.map(anecdote => (
-            <div key={anecdote.id}>
-                <div aria-label="anecdote">{anecdote.content}</div>
+            <div className="anecdote" key={anecdote.id}>
+                <div>{anecdote.content}</div>
                 <div>
                     has {anecdote.votes}
                     <button onClick={() => vote(anecdote)}>vote</button>
