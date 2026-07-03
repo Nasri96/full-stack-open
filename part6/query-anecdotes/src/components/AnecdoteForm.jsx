@@ -1,7 +1,9 @@
 import { useAnecdotes } from "../useAnecdotes"
+import NotificationContext from "../notificationContext";
 
-const AnecdoteForm = ({ submitAnecdote }) => {
+const AnecdoteForm = () => {
   const { handleCreateAnecdote } = useAnecdotes();
+
 
   const onCreate = (event) => {
     event.preventDefault()
